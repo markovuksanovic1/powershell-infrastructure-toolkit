@@ -12,9 +12,7 @@ exists is in its `.DESCRIPTION` block.
 | Script | What it does |
 |---|---|
 | `Certificates/Get-CertificateExpiry.ps1` | Connects to endpoints, reads the served certificate, flags anything expiring inside a threshold |
-| `AD/Get-StaleADUsers.ps1` | Finds enabled accounts with no logon activity past a cutoff |
-| `Infrastructure/Get-DiskSpaceReport.ps1` | Queries a server list for volumes below a free-space percentage |
-| `VMware/Get-SnapshotReport.ps1` | Reports snapshots older than N days and the storage they consume |
+| `Infrastructure/Test-ServerHealth.ps1` | Uptime, memory pressure, low-space volumes, stopped automatic services and pending reboot in a single pass |
 
 ## Usage
 
@@ -28,13 +26,19 @@ Get-CertificateExpiry -Endpoint 'example.com','example.org:8443' -WarningDays 45
 ```
 
 Output is objects, so it pipes into `Where-Object`, `Export-Csv` or a
-scheduled task that emails the result.
+scheduled task that mails the result:
+
+```powershell
+Get-Content .\servers.txt | Test-ServerHealth |
+    Where-Object { $_.PendingReboot -or $_.LowSpaceVolumes } |
+    Export-Csv .\attention.csv -NoTypeInformation
+```
 
 ## Requirements
 
 - PowerShell 5.1 or 7.x
-- `ActiveDirectory` module for AD scripts (RSAT)
-- `VMware.PowerCLI` for VMware scripts
+- Local administrator rights on any remote target
+- WinRM enabled for remote queries; local queries fall back to DCOM
 
 ## Notes
 
